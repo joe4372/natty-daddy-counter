@@ -1,5 +1,5 @@
 // Natty Daddy Counter — Service Worker
-const CACHE_NAME = 'natty-daddy-cache-v2'; // <- bump this to force refresh
+const CACHE_NAME = 'natty-daddy-cache-v4'; // <- bump this to force refresh
 const ASSETS = [
   './',
   './index.html',
