@@ -168,7 +168,7 @@
 
   function animateRipple() {
   const r = document.getElementById('ripple');
-  if (!r) return; // no SVG ripple when using an <img>
+  if (!r) return; // no SVG ripple present
   r.setAttribute('r','0');
   r.setAttribute('opacity','0.4');
   r.style.transition = 'none';
@@ -178,6 +178,7 @@
     r.setAttribute('opacity','0.0');
   });
 }
+
 
   function render() {
     const s = loadState();
@@ -253,6 +254,35 @@ function currentWeekKeys() {
 // Sum for this week (Mon→Sun)
 function rollingWeekTotal(state) {
   return currentWeekKeys().reduce((sum, k) => sum + (state.countsByDay[k] || 0), 0);
+}
+
+  function render() {
+  const s = loadState();
+  const k = beerDayKey();
+
+  const todayEl = document.getElementById('todayCount');
+  if (todayEl) todayEl.textContent = s.countsByDay[k] || 0;
+
+  const weekEl = document.getElementById('rollingWeek');
+  if (weekEl) weekEl.textContent = rollingWeekTotal(s);
+
+  const labelEl = document.getElementById('beerDayLabel');
+  if (labelEl) labelEl.textContent =
+    `Today = ${formatLabelKey(k)} (beer day runs 6:00 AM → 5:59:59 AM)`;
+
+  const histWrap = document.getElementById('historyList');
+  if (histWrap) {
+    histWrap.innerHTML = '';
+    const keys = lastNDaysKeys(7);
+    keys.forEach((kk, idx) => {
+      const row = document.createElement('div'); row.className = 'row';
+      const d = document.createElement('div'); d.className = 'd';
+      d.textContent = formatLabelKey(kk) + (idx === 0 ? ' (today)' : '');
+      const n = document.createElement('div'); n.className = 'n';
+      n.textContent = (s.countsByDay[kk] || 0);
+      row.appendChild(d); row.appendChild(n); histWrap.appendChild(row);
+    });
+  }
 }
 
   
