@@ -43,11 +43,10 @@
     </header>
 
     <div class="card" id="tap-card" aria-live="polite">
-      <button class="big-button" id="tapBtn" title="Add one">
-        <!-- simplified “Natty” can SVG -->
-        <button class="big-button" id="tapBtn" title="Add one">
-  <img class="can" src="icons/natty-can.png" alt="Natty can" />
-      </button>
+     <!-- ONE button only -->
+<button class="big-button" id="tapBtn" title="Add one" style="cursor:pointer">
+  <img class="can" src="icons/natty-can.png" alt="Natty can" draggable="false" />
+</button>
 
       <div class="counters">
         <div class="counter">
@@ -168,10 +167,17 @@
   }
 
   function animateRipple() {
-    const r = document.getElementById('ripple');
-    r.setAttribute('r','0'); r.setAttribute('opacity','0.4'); r.style.transition = 'none';
-    requestAnimationFrame(()=>{ r.style.transition = 'r 450ms ease-out, opacity 520ms ease-out'; r.setAttribute('r','180'); r.setAttribute('opacity','0.0'); });
-  }
+  const r = document.getElementById('ripple');
+  if (!r) return; // no SVG ripple when using an <img>
+  r.setAttribute('r','0');
+  r.setAttribute('opacity','0.4');
+  r.style.transition = 'none';
+  requestAnimationFrame(() => {
+    r.style.transition = 'r 450ms ease-out, opacity 520ms ease-out';
+    r.setAttribute('r','180');
+    r.setAttribute('opacity','0.0');
+  });
+}
 
   function render() {
     const s = loadState();
@@ -198,7 +204,7 @@
       navigator.serviceWorker.register('./sw.js').catch(console.error);
     });
   }
-
+  
   // Auto-refresh around the 6AM boundary
   let lastKey = beerDayKey();
   setInterval(() => {
@@ -206,10 +212,17 @@
     if (nowKey !== lastKey) { lastKey = nowKey; render(); }
   }, 30 * 1000);
 
-  document.getElementById('tapBtn').addEventListener('click', addOne, { passive: true });
-  document.getElementById('undoBtn').addEventListener('click', undoOne, { passive: true });
-  document.getElementById('zeroTodayBtn').addEventListener('click', zeroToday, { passive: true });
-  render();
+// Re-bind the tap button after replacing the SVG with an <img>
+const tapBtn = document.getElementById('tapBtn');
+tapBtn.addEventListener('click', addOne, { passive: true });
+// Optional extra reliability on iOS:
+tapBtn.addEventListener('touchend', (e) => { e.preventDefault(); addOne(); }, { passive: false });
+
+// Keep only these two for the other buttons:
+document.getElementById('undoBtn').addEventListener('click', undoOne, { passive: true });
+document.getElementById('zeroTodayBtn').addEventListener('click', zeroToday, { passive: true });
+
+render();
 })();
 </script>
 </body>
