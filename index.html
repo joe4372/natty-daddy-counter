@@ -54,8 +54,8 @@
           <div class="value" id="todayCount">0</div>
         </div>
         <div class="counter">
-          <div class="label">Last 30 Days</div>
-          <div class="value" id="rolling30">0</div>
+          <div class="label">This Week</div>
+          <div class="value" id="rollingWeek">0</div>
         </div>
       </div>
 
@@ -129,7 +129,7 @@
       }
     }
     s.lastEvents.pop();
-    pruneOlderThan30Days(s);
+    pruneOlderThan35Days(s);
     saveState(s);
     render();
   }
@@ -183,7 +183,7 @@
     const s = loadState();
     const k = beerDayKey();
     document.getElementById('todayCount').textContent = s.countsByDay[k] || 0;
-    document.getElementById('rolling30').textContent = rolling30Total(s);
+    document.getElementById('rollingWeek').textContent = rollingWeekTotal(s);
     document.getElementById('beerDayLabel').textContent = `Today = ${formatLabelKey(k)} (beer day runs 6:00 AM → 5:59:59 AM)`;
 
     const histWrap = document.getElementById('historyList');
@@ -222,6 +222,40 @@ tapBtn.addEventListener('touchend', (e) => { e.preventDefault(); addOne(); }, { 
 document.getElementById('undoBtn').addEventListener('click', undoOne, { passive: true });
 document.getElementById('zeroTodayBtn').addEventListener('click', zeroToday, { passive: true });
 
+  // Turn YYYY-MM-DD key back into a Date (local)
+function keyToDate(key) {
+  const [y,m,d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+// Keys for the current beer-week (Mon→Sun) using the 6 AM day rule
+function currentWeekKeys() {
+  // Today’s beer-day key (accounts for 6 AM boundary)
+  const todayKey = beerDayKey();
+  const today = keyToDate(todayKey);
+
+  // Find Monday of this beer-week (Mon=1 ... Sun=0 in JS getDay)
+  const dow = today.getDay();                  // 0=Sun,1=Mon,...,6=Sat
+  const daysFromMonday = (dow + 6) % 7;        // converts 0..6 -> 6..5, Monday->0
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - daysFromMonday);
+
+  // Build 7 beer-day keys Mon..Sun
+  const keys = [];
+  const cur = new Date(monday);
+  for (let i = 0; i < 7; i++) {
+    keys.push(beerDayKey(cur));                // reuse 6 AM rule when deriving keys
+    cur.setDate(cur.getDate() + 1);
+  }
+  return keys;
+}
+
+// Sum for this week (Mon→Sun)
+function rollingWeekTotal(state) {
+  return currentWeekKeys().reduce((sum, k) => sum + (state.countsByDay[k] || 0), 0);
+}
+
+  
 render();
 })();
 </script>
